@@ -3,7 +3,7 @@
 class Autoloading{
     public static function LoadClass(){
         spl_autoload_register(function ($className){
-            $paths=['core/kernel/','Model/' ,'repository/' ,'Controller/','config/','src'];
+            $paths=['core/kernel/','Model/' ,'repository/' ,'Controller/','config/','src','core/kernel/menu/'];
             foreach($paths as $path){
                 $file =$path.$className.'.php';
                 if(file_exists($file)){

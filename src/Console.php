@@ -20,4 +20,9 @@ class Console {
     public static function clear(): void {
         passthru(PHP_OS_FAMILY === 'Windows' ? 'cls' : 'clear');
     }
+        public static function pause(): void
+    {
+        echo PHP_EOL . "Appuyez sur Entrée pour continuer...";
+        fgets(STDIN);
+    }
 }

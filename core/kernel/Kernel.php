@@ -9,7 +9,7 @@ class Kernel
         while (true) {
             Console::clear();
             Console::write("=====================================", "yellow");
-            Console::write("     🎮 GIGA-LEAGUE MANAGER (CLI)", "yellow");
+            Console::write("      GIGA-LEAGUE MANAGER (CLI)", "yellow");
             Console::write("=====================================", "yellow");
 
             Console::write("1️⃣  Organisateur");

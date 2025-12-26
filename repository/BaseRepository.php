@@ -1,8 +1,7 @@
 <?php  
 require_once "./repository/CrudInterface.php";
 abstract class BaseRepository implements CrudInterface
- {
-
+{
     protected PDO $conn;
     protected string $table;
     protected string $entityClass;
@@ -11,12 +10,15 @@ abstract class BaseRepository implements CrudInterface
     {
         $this->conn = $pdo;
     }
-    public function create(object $entity): bool {
+
+    public function create(object $entity): bool
+    {
         $ref = new ReflectionClass($entity);
         $props = $ref->getProperties();
-        $names = [];
+
+        $fields = [];
         $params = [];
-        $data = [];
+        $data   = [];
 
         foreach ($props as $prop) {
             $prop->setAccessible(true);
@@ -24,71 +26,77 @@ abstract class BaseRepository implements CrudInterface
 
             if ($name === 'id') continue;
 
-            $names[] = $name;
+            $fields[] = $name;
             $params[] = ':' . $name;
             $data[$name] = $prop->getValue($entity);
         }
 
-        $sql = "INSERT INTO {$this->table} (" . implode(',', $names) . ")
+        $sql = "INSERT INTO {$this->table} (" . implode(',', $fields) . ")
                 VALUES (" . implode(',', $params) . ")";
 
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute($data);
+        return $this->conn->prepare($sql)->execute($data);
     }
 
-    public function delete(object $entity): bool {
-        $sql = "DELETE FROM {$this->table} WHERE id = :id";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            'id' => $entity->getId()
-        ]);
-    }
+public function delete(int $id): bool
+{
+    $sql = "DELETE FROM {$this->table} WHERE id = :id";
+    return $this->conn->prepare($sql)->execute(['id' => $id]);
+}
 
-    public function findAll(): array {
-        $sql = "SELECT * FROM {$this->table}";
-        $stmt = $this->conn->query($sql);
+
+    public function findAll(): array
+    {
+        $stmt = $this->conn->query("SELECT * FROM {$this->table}");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $entities = [];
+        $result = [];
         foreach ($rows as $row) {
             $entity = new $this->entityClass();
             $entity->hydrate($row);
-            $entities[] = $entity;
+            $result[] = $entity;
         }
-        return $entities;
-    }
-    public function findOne(int $id):?object{
-        $sql ="SELECT * FROM {$this->table} WHERE id=?";
-        $stmt =$this->conn->prepare($sql);
-        $stmt->execute([$id]);
-        $result =$stmt->fetch(PDO::FETCH_ASSOC);
-        if(!$result)return null;
-        $entity=new $this->entityClass();
-        $entity->hydrate($result);
-        return $entity ;
+        return $result;
     }
 
-    public function update(object $entity):bool
+    public function findOne(int $id): ?object
     {
-        $ref -new ReflectionClass($entity);
-        $Props =$ref->getProperties();
-        $set  = [];
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) return null;
+
+        $entity = new $this->entityClass();
+        $entity->hydrate($row);
+        return $entity;
+    }
+
+    public function update(object $entity): bool
+    {
+        $ref = new ReflectionClass($entity);
+        $props = $ref->getProperties();
+
+        $set = [];
         $data = [];
-        $id   = null;
-        foreach($props as $prop){
-            $key =$ref->fgetName();
-            $value =$ref->getValue($entity);
-            if($key ==='id'){
-                $id =$value;
+        $id = null;
+
+        foreach ($props as $prop) {
+            $prop->setAccessible(true);
+            $name = $prop->getName();
+            $value = $prop->getValue($entity);
+
+            if ($name === 'id') {
+                $id = $value;
                 continue;
             }
-            $set[]="$key=:$key";
-            $data[$key]=$value;
-        }
-        $data['id']=$id;
-        $sql ="UPDATE {$this->table}  SET(".implode(',' ,$set).") WHERE id=$id";
-        $stmt =$this->pdo->prepare($sql);
-        return $stmt->execute($data);
 
+            $set[] = "$name = :$name";
+            $data[$name] = $value;
+        }
+
+        $data['id'] = $id;
+
+        $sql = "UPDATE {$this->table} SET " . implode(',', $set) . " WHERE id = :id";
+        return $this->conn->prepare($sql)->execute($data);
     }
 }
