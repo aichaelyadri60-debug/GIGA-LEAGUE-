@@ -1,15 +1,16 @@
 <?php  
-
-abstract class BaseRepository {
+require_once "./repository/CrudInterface.php";
+abstract class BaseRepository implements CrudInterface
+ {
 
     protected PDO $conn;
     protected string $table;
     protected string $entityClass;
 
-    public function __construct() {
-        $this->conn = require __DIR__ . '/../config/db.php';
+    public function __construct(PDO $pdo)
+    {
+        $this->conn = $pdo;
     }
-
     public function create(object $entity): bool {
         $ref = new ReflectionClass($entity);
         $props = $ref->getProperties();
@@ -55,5 +56,39 @@ abstract class BaseRepository {
             $entities[] = $entity;
         }
         return $entities;
+    }
+    public function findOne(int $id):?object{
+        $sql ="SELECT * FROM {$this->table} WHERE id=?";
+        $stmt =$this->conn->prepare($sql);
+        $stmt->execute([$id]);
+        $result =$stmt->fetch(PDO::FETCH_ASSOC);
+        if(!$result)return null;
+        $entity=new $this->entityClass();
+        $entity->hydrate($result);
+        return $entity ;
+    }
+
+    public function update(object $entity):bool
+    {
+        $ref -new ReflectionClass($entity);
+        $Props =$ref->getProperties();
+        $set  = [];
+        $data = [];
+        $id   = null;
+        foreach($props as $prop){
+            $key =$ref->fgetName();
+            $value =$ref->getValue($entity);
+            if($key ==='id'){
+                $id =$value;
+                continue;
+            }
+            $set[]="$key=:$key";
+            $data[$key]=$value;
+        }
+        $data['id']=$id;
+        $sql ="UPDATE {$this->table}  SET(".implode(',' ,$set).") WHERE id=$id";
+        $stmt =$this->pdo->prepare($sql);
+        return $stmt->execute($data);
+
     }
 }

@@ -1,23 +1,23 @@
 <?php
-
+require_once "./Model/BaseEntity.php";
 class Club extends BaseEntity {
-    private int $id;
-    private string $nom;
+    private ?int $id =null;
+    private string $Nom;
     private string $ville;
     private string $date_creation;
 
-    public function getId(): int {
-        return $this->id;
+    public function getId(): ?int {
+        return $this->id ;
     }
     public function setId(int $id): void {
-        $this->id = $id;
+        $this->id = $id ;
     }
 
     public function getNom(): string {
-        return $this->nom;
+        return $this->Nom ;
     }
     public function setNom(string $nom): void {
-        $this->nom = $nom;
+        $this->Nom = $nom ;
     }
 
     public function getVille(): string {

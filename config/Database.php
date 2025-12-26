@@ -16,7 +16,7 @@ class Database{
         try{
             $conn =new PDO("mysql:host={$this->servername};dbname={$this->dbname}",$this->username  ,$this->password);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            echo "Connected successfully";
+            echo "Connected successfully\n";
             return $conn;
         }catch(PDOException $e){
             die("erreur connexion " .$e->getMessage());
